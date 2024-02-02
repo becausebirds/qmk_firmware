@@ -20,12 +20,18 @@
 enum planck_layers { _QWERTY, _LOWER, _RAISE, _NUMBERS };
 enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE };
 enum planck_keycodes { QWERTY = SAFE_RANGE };
+enum { TD_RSFT_ENT = 0 };
 
 #define LOWER MO(_LOWER)
 #define RAISE MO(_RAISE)
 #define NUMBERS TO(_NUMBERS)
 #define KC_CAD	LALT(LCTL(KC_DEL))
 
+tap_dance_action_t tap_dance_actions[] = {
+  //Tap once for Shift, twice for Enter
+  [TD_RSFT_ENT]  = ACTION_TAP_DANCE_DOUBLE(KC_RSFT, KC_ENT)
+// Other declarations would go here, separated by commas, if you have them
+};
 
 /* clang-format off */
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -36,7 +42,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 |------+------+------+------+------+------+------+------+------+------+------+------|
 | Tab  |   A  |   S  |   D  |   F  |   G  |   H  |   J  |   K  |   L  |   ;  |  '   |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-| Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  |Enter |
+| Shift|   Z  |   X  |   C  |   V  |   B  |   N  |   M  |   ,  |   .  |   /  |SFTENT|
 |------+------+------+------+------+------+------+------+------+------+------+------|
 |CmdCtl| LGUI | Alt  |TO_Num| Lower|    Space    |Raise | Left | Down |  Up  |Right |
 `-----------------------------------------------------------------------------------'
@@ -45,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [_QWERTY] = LAYOUT_planck_1x2uC(
     KC_ESC,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC,
     KC_TAB,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,
-    KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, RSFT_T(KC_ENT),
+    KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, TD(TD_RSFT_ENT),
     KC_CMD_CTRL, KC_LGUI, KC_LALT, KC_NO,  LOWER,  KC_SPC,  RAISE,   KC_LEFT, KC_DOWN, KC_UP,   KC_RGHT
 ),
 
