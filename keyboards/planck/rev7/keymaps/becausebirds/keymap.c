@@ -63,14 +63,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 |------+------+------+------+------+------+------+------+------+------+------+------|
 |      |  F7  |  F8  |  F9  |  F10 | Copy | Paste|      |      |      |      |      |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-|      |      |      |      |      |    Space    |  Num |      | Mute | Vol+ | Vol+ |
+|      |      |      |      |NewTab|    Space    |  Num |      | Mute | Vol+ | Vol+ |
 `-----------------------------------------------------------------------------------'
  */
 [_LOWER] = LAYOUT_planck_1x2uC(
     KC_TILD, KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC, KC_CIRC, KC_AMPR,    KC_ASTR,    KC_LPRN, KC_RPRN, KC_BSPC,
     KC_DEL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   LCMD(KC_T),   KC_UNDS,    KC_PLUS,    KC_LCBR, KC_RCBR, KC_PIPE,
     KC_NO,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  LCTL(KC_C),  LCTL(KC_V),      KC_NO,      KC_NO,      KC_NO,   KC_NO,   KC_NO,
-    KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_SPC,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
+    KC_NO,   KC_NO,   KC_NO,   KC_NEW_TAB,   KC_NO,   KC_SPC,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
 ),
 
 /* Raise
