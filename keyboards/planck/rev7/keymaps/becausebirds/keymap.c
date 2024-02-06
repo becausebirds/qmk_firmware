@@ -18,7 +18,7 @@
 #include "os_detection.h"
 
 enum planck_layers { _QWERTY, _LOWER, _RAISE, _NUMBERS };
-enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB };
+enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1Pass };
 enum planck_keycodes { QWERTY = SAFE_RANGE };
 enum { TD_RSFT_ENT = 0 };
 
@@ -63,14 +63,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 |------+------+------+------+------+------+------+------+------+------+------+------|
 |      |  F7  |  F8  |  F9  |  F10 | Copy | Paste|      |      |      |      |      |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-|      |      |      |      |NewTab|    Space    |  Num |      | Mute | Vol+ | Vol+ |
+| 1Pwd |      |      |NewTab|      |    Space    |  Num |      | Mute | Vol+ | Vol+ |
 `-----------------------------------------------------------------------------------'
  */
 [_LOWER] = LAYOUT_planck_1x2uC(
     KC_TILD, KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC, KC_CIRC, KC_AMPR,    KC_ASTR,    KC_LPRN, KC_RPRN, KC_BSPC,
     KC_DEL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   LCMD(KC_T),   KC_UNDS,    KC_PLUS,    KC_LCBR, KC_RCBR, KC_PIPE,
     KC_NO,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  LCTL(KC_C),  LCTL(KC_V),      KC_NO,      KC_NO,      KC_NO,   KC_NO,   KC_NO,
-    KC_NO,   KC_NO,   KC_NO,   KC_NEW_TAB,   KC_NO,   KC_SPC,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
+    KC_1Pass,   KC_NO,   KC_NO,   KC_NEW_TAB,   KC_NO,   KC_SPC,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
 ),
 
 /* Raise
@@ -134,6 +134,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else if (detected_host_os() == OS_WINDOWS) {
                     register_code(KC_LCTL);
                     tap_code(KC_T);
+                    unregister_code(KC_LCTL);
+                }
+            } else {
+                unregister_code(KC_LGUI);
+                unregister_code(KC_LCTL);
+            }
+            return false;
+        case KC_1Pass:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_MACOS) {
+                    register_code(KC_LGUI);
+                    tap_code(KC_BSLS);
+                    unregister_code(KC_LGUI);
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    register_code(KC_LCTL);
+                    tap_code(KC_BSLS);
                     unregister_code(KC_LCTL);
                 }
             } else {
