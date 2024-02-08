@@ -18,7 +18,7 @@
 #include "os_detection.h"
 
 enum planck_layers { _QWERTY, _LOWER, _RAISE, _NUMBERS };
-enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1PASS, KC_ALL, KC_ALTTAB};
+enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1PASS, KC_ALL, KC_ALTTAB, KC_SCRSHT};
 enum planck_keycodes { QWERTY = SAFE_RANGE };
 enum { TD_RSFT_ENT = 0 };
 
@@ -81,14 +81,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 |------+------+------+------+------+------+------+------+------+------+------+------|
 |      |  F7  |  F8  |  F9  |  F10 |  F11 |  F12 |      |      |      |      |      |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-|RGBTog| RGB- | RGB+ |RGBMod|  Num |    Space    |      |      | Mute | Vol+ | Vol+ |
+|RGBTog| RGB- | RGB+ |RGBMod|  Num |    Space    |      |ScrSht| Mute | Vol+ | Vol+ |
 `-----------------------------------------------------------------------------------'
  */
 [_RAISE] = LAYOUT_planck_1x2uC(
     KC_MINS,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_PLUS,
     KC_DEL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_MINS, KC_EQL,  KC_LBRC, KC_RBRC, KC_BSLS,
     KC_NO,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,
-    RGB_TOG, RGB_VAD, RGB_VAI, RGB_MOD, TO(NUMBERS), KC_SPC, KC_NO,   KC_NO,   KC_MUTE, KC_VOLD, KC_VOLU
+    RGB_TOG, RGB_VAD, RGB_VAI, RGB_MOD, TO(NUMBERS), KC_SPC, KC_NO,   KC_SCRSHT,   KC_MUTE, KC_VOLD, KC_VOLU
 ),
 
 /*
@@ -251,6 +251,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             unregister_code(KC_LGUI);
         } else if (detected_host_os() == OS_WINDOWS) {
             unregister_code(KC_LALT);
+        }
+    }
+    return false;
+        case KC_SCRSHT:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_MACOS) {
+                    register_code(KC_LGUI);
+                    register_code(KC_LSFT);
+                    tap_code(KC_4);
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    register_code(KC_LGUI);
+                    register_code(KC_LSFT);
+                    tap_code(KC_S);
+                }
+            } else {
+        if (detected_host_os() == OS_MACOS) {
+            unregister_code(KC_LGUI);
+            unregister_code(KC_LSFT);
+        } else if (detected_host_os() == OS_WINDOWS) {
+            unregister_code(KC_LGUI);
+            unregister_code(KC_LSFT);
         }
     }
     return false;
