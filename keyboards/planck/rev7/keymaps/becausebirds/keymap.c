@@ -18,15 +18,17 @@
 #include "os_detection.h"
 
 enum planck_layers { _QWERTY, _LOWER, _RAISE, _NUMBERS };
-enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1PASS, KC_ALL, KC_ALTTAB, KC_SCRSHT};
+enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1PASS, KC_ALL, ALT_TAB, KC_SCRSHT, KC_SPLT, KC_CAD };
 enum planck_keycodes { QWERTY = SAFE_RANGE };
 enum { TD_RSFT_ENT = 0 };
 
 #define LOWER MO(_LOWER)
 #define RAISE MO(_RAISE)
 #define NUMBERS TO(_NUMBERS)
-#define KC_CAD	LALT(LCTL(KC_DEL))
+#define QWERTY TO(_QWERTY)
 #define AUDIO_INIT_DELAY
+
+bool is_alt_tab_active = false;
 
 tap_dance_action_t tap_dance_actions[] = {
   //Tap once for Shift, twice for Enter
@@ -59,18 +61,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 ,-----------------------------------------------------------------------------------.
 |   ~  |   !  |   @  |   #  |   $  |   %  |   ^  |   &  |   *  |   (  |   )  | Bksp |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-| Del  |  F1  |  F2  |AltTab|  F4  |  F5  |  F6  |   _  |   +  |   {  |   }  |  |   |
+| Del  |  F1  |  F2  |AltTab| Find |  F5  |  F6  |   _  |   +  |   {  |   }  |  |   |
 |------+------+------+------+------+------+------+------+------+------+------+------|
 |      |  F7  | Undo |  All |  Cut | Copy | Paste|      |      |      |      |      |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-| 1Pwd |      |      |NewTab|      |    Space    |  Num |      | Mute | Vol+ | Vol+ |
+| 1Pwd |      |      |NewTab|      |  Spotlight  |  Num |      | Mute | Vol+ | Vol+ |
 `-----------------------------------------------------------------------------------'
  */
 [_LOWER] = LAYOUT_planck_1x2uC(
     KC_TILD, KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC, KC_CIRC, KC_AMPR,    KC_ASTR,    KC_LPRN, KC_RPRN, KC_BSPC,
-    KC_DEL,  KC_F1,   KC_F2,   KC_ALTTAB,   KC_F4,   KC_F5,   LCMD(KC_T),   KC_UNDS,    KC_PLUS,    KC_LCBR, KC_RCBR, KC_PIPE,
+    KC_DEL,  KC_F1,   KC_F2,   ALT_TAB,   KC_FIND,   KC_F5,   LCMD(KC_T),   KC_UNDS,    KC_PLUS,    KC_LCBR, KC_RCBR, KC_PIPE,
     KC_NO,   KC_F7,   KC_UNDO,   KC_ALL,   KC_CUT,  KC_COPY,  KC_PASTE,      KC_NO,      KC_NO,      KC_NO,   KC_NO,   KC_NO,
-    KC_1PASS,   KC_NO,   KC_NO,   KC_NEW_TAB,   KC_NO,   KC_SPC,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
+    KC_1PASS,   KC_NO,   KC_NO,   KC_NEW_TAB,   KC_NO,   KC_SPLT,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
 ),
 
 /* Raise
@@ -237,23 +239,45 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 unregister_code(KC_LCTL);
             }
             return false;
-        case KC_ALTTAB:
+        case ALT_TAB:
             if (record->event.pressed) {
+            if (!is_alt_tab_active) {
+                is_alt_tab_active = true;
+
                 if (detected_host_os() == OS_MACOS) {
-                    register_code(KC_LGUI);
-                    tap_code(KC_TAB);
-                } else if (detected_host_os() == OS_WINDOWS) {
-                    register_code(KC_LALT);
-                    tap_code(KC_TAB);
+                register_code(KC_LGUI);  // Use Command key on macOS
+                } else {
+                register_code(KC_LALT);  // Use Alt key on other OSes
                 }
+            }
+            register_code(KC_TAB);
             } else {
-        if (detected_host_os() == OS_MACOS) {
-            unregister_code(KC_LGUI);
-        } else if (detected_host_os() == OS_WINDOWS) {
-            unregister_code(KC_LALT);
+            unregister_code(KC_TAB);
+            }
+            return false;
+        case KC_ENTER:
+      if (record->event.pressed) {
+        if (is_alt_tab_active) {
+          unregister_code(KC_LALT);
+          unregister_code(KC_LGUI);
+          is_alt_tab_active = false;
+          return false;
         }
-    }
-    return false;
+      }
+      return true;
+
+    case KC_ESCAPE:
+      if (record->event.pressed) {
+        if (is_alt_tab_active) {
+          register_code(KC_ESCAPE);
+          unregister_code(KC_LALT);
+          unregister_code(KC_LGUI);
+          unregister_code(KC_ESCAPE);
+          is_alt_tab_active = false;
+          return false;
+        }
+      }
+      return true;
         case KC_SCRSHT:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_MACOS) {
@@ -275,6 +299,47 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
     return false;
+        case KC_FIND:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_MACOS) {
+                    register_code(KC_LGUI);
+                    tap_code(KC_F);
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    register_code(KC_LCTL);
+                    tap_code(KC_F);
+                }
+            } else {
+        if (detected_host_os() == OS_MACOS) {
+            unregister_code(KC_LGUI);
+        } else if (detected_host_os() == OS_WINDOWS) {
+            unregister_code(KC_LCTL);
+        }
+    }
+    return false;
+        case KC_SPLT:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_MACOS) {
+                    register_code(KC_LGUI);
+                    tap_code(KC_SPC);
+                } 
+            } else {
+        if (detected_host_os() == OS_MACOS) {
+            unregister_code(KC_LGUI);
+        } 
+    }
+    return false;
+        case KC_CAD:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_WINDOWS) {
+                    register_code(KC_LCTL);
+                    register_code(KC_LALT);
+                    tap_code(KC_DEL);
+                }
+            } else {
+                unregister_code(KC_LCTL);
+                unregister_code(KC_LALT);
+                layer_move(_QWERTY);     
+    }
         default:
             return true;
     }
