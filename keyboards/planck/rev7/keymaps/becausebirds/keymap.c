@@ -18,7 +18,7 @@
 #include "os_detection.h"
 
 enum planck_layers { _QWERTY, _LOWER, _RAISE, _NUMBERS };
-enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1PASS, KC_ALL, ALT_TAB, KC_SCRSHT, KC_SPLT, KC_CAD };
+enum custom_keycodes { KC_CMD_CTRL = SAFE_RANGE, KC_NEW_TAB, KC_1PASS, KC_ALL, ALT_TAB, KC_SCRSHT, KC_SPLT, KC_CAD, KC_EMOJI, KC_SHALTA };
 enum planck_keycodes { QWERTY = SAFE_RANGE };
 enum { TD_RSFT_ENT = 0 };
 
@@ -27,8 +27,11 @@ enum { TD_RSFT_ENT = 0 };
 #define NUMBERS TO(_NUMBERS)
 #define QWERTY TO(_QWERTY)
 #define AUDIO_INIT_DELAY
+#define ALT_TAB_DEBOUNCE_TIME 50
 
 bool is_alt_tab_active = false;
+bool is_lower_active = false;
+uint16_t alt_tab_debounce_timer = 50;
 
 tap_dance_action_t tap_dance_actions[] = {
   //Tap once for Shift, twice for Enter
@@ -61,7 +64,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 ,-----------------------------------------------------------------------------------.
 |   ~  |   !  |   @  |   #  |   $  |   %  |   ^  |   &  |   *  |   (  |   )  | Bksp |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-| Del  |  F1  |  F2  |AltTab| Find |  F5  |  F6  |   _  |   +  |   {  |   }  |  |   |
+| Del  |  F1  |  F2  |AltTab|ShAlTa|  F5  |  F6  |   _  |   +  |   {  |   }  |  |   |
 |------+------+------+------+------+------+------+------+------+------+------+------|
 |      |  F7  | Undo |  All |  Cut | Copy | Paste|      |      |      |      |      |
 |------+------+------+------+------+------+------+------+------+------+------+------|
@@ -70,7 +73,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  */
 [_LOWER] = LAYOUT_planck_1x2uC(
     KC_TILD, KC_EXLM, KC_AT,   KC_HASH, KC_DLR,  KC_PERC, KC_CIRC, KC_AMPR,    KC_ASTR,    KC_LPRN, KC_RPRN, KC_BSPC,
-    KC_DEL,  KC_F1,   KC_F2,   ALT_TAB,   KC_FIND,   KC_F5,   LCMD(KC_T),   KC_UNDS,    KC_PLUS,    KC_LCBR, KC_RCBR, KC_PIPE,
+    KC_DEL,  KC_F1,   KC_F2,   ALT_TAB,   KC_SHALTA,   KC_F5,   LCMD(KC_T),   KC_UNDS,    KC_PLUS,    KC_LCBR, KC_RCBR, KC_PIPE,
     KC_NO,   KC_F7,   KC_UNDO,   KC_ALL,   KC_CUT,  KC_COPY,  KC_PASTE,      KC_NO,      KC_NO,      KC_DOT,   KC_NO,   KC_NO,
     KC_1PASS,   KC_NO,   KC_NO,   KC_NEW_TAB,   KC_NO,   KC_SPLT,   TO(NUMBERS),   KC_NO,      KC_MUTE,    KC_VOLD,    KC_VOLU
 ),
@@ -79,18 +82,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
  ,-----------------------------------------------------------------------------------.
 |   -  |   1  |   2  |   3  |   4  |   5  |   6  |   7  |   8  |   9  |   0  |   +  |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-| Del  |  F1  |  F2  |  F3  |  F4  |  F5  |  F6  |   -  |   =  |   [  |   ]  |  \   |
+| Del  |      |      |      |      |      |      |   -  |   =  |   [  |   ]  |  \   |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-|      |  F7  |  F8  |  F9  |  F10 |  F11 |  F12 |      |      |      |      |      |
+|      |      |      |      |      |      |      |      |      |   .  |      |      |
 |------+------+------+------+------+------+------+------+------+------+------+------|
-|RGBTog| RGB- | RGB+ |RGBMod|  Num |    Space    |      |ScrSht| Mute | Vol+ | Vol+ |
+|RGBTog| RGB- | RGB+ |RGBMod|  Num |    Emoji    |      |ScrSht| Mute | Vol+ | Vol+ |
 `-----------------------------------------------------------------------------------'
  */
 [_RAISE] = LAYOUT_planck_1x2uC(
     KC_MINS,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_PLUS,
-    KC_DEL,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_MINS, KC_EQL,  KC_LBRC, KC_RBRC, KC_BSLS,
-    KC_NO,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_NO,   KC_NO,   KC_DOT,   KC_NO,   KC_NO,
-    RGB_TOG, RGB_VAD, RGB_VAI, RGB_MOD, TO(NUMBERS), KC_SPC, KC_NO,   KC_SCRSHT,   KC_MUTE, KC_VOLD, KC_VOLU
+    KC_DEL,  KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_MINS, KC_EQL,  KC_LBRC, KC_RBRC, KC_BSLS,
+    KC_NO,   KC_NO,   KC_NO,   KC_NO,   KC_NO,  KC_NO,  KC_NO,  KC_NO,   KC_NO,   KC_DOT,   KC_NO,   KC_NO,
+    RGB_TOG, RGB_VAD, RGB_VAI, RGB_MOD, TO(NUMBERS), KC_EMOJI, KC_NO,   KC_SCRSHT,   KC_MUTE, KC_VOLD, KC_VOLU
 ),
 
 /*
@@ -153,6 +156,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     register_code(KC_LCTL);
                     tap_code(KC_BSLS);
                     unregister_code(KC_LCTL);
+                }
+            } else {
+                unregister_code(KC_LGUI);
+                unregister_code(KC_LCTL);
+            }
+            return false;
+        case KC_EMOJI:
+            if (record->event.pressed) {
+                if (detected_host_os() == OS_MACOS) {
+                    register_code(KC_LGUI);
+                    register_code(KC_LCTL);
+                    tap_code(KC_SPC);
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    register_code(KC_LGUI);
+                    tap_code(KC_DOT);
                 }
             } else {
                 unregister_code(KC_LGUI);
@@ -239,45 +257,70 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 unregister_code(KC_LCTL);
             }
             return false;
+        case LOWER:
+            if (record->event.pressed) {
+                is_lower_active = true;  // Set the lower layer state to active
+            } else { // Key is released
+                is_lower_active = false; // Set the lower layer state to inactive
+                unregister_code(KC_LALT);
+                unregister_code(KC_LGUI);
+            }
+            break;
         case ALT_TAB:
             if (record->event.pressed) {
-            if (!is_alt_tab_active) {
-                is_alt_tab_active = true;
-
-                if (detected_host_os() == OS_MACOS) {
-                register_code(KC_LGUI);  // Use Command key on macOS
+                if (is_lower_active) {
+                    if (detected_host_os() == OS_MACOS) {
+                        register_code(KC_LGUI);  // Use Command key on macOS
+                    } else {
+                        register_code(KC_LALT);  // Use Alt key on other OSes
+                    }
+                    is_alt_tab_active = true;
+                    tap_code(KC_TAB);  // Tap Tab key
                 } else {
-                register_code(KC_LALT);  // Use Alt key on other OSes
+                    if (is_alt_tab_active) {
+                        tap_code(KC_TAB);  // Tap Tab key
+                    }
+                }
+            } else { // Key is released
+                if (is_lower_active) {
+                    is_alt_tab_active = false;
                 }
             }
-            register_code(KC_TAB);
-            } else {
-            unregister_code(KC_TAB);
+            return false;
+        case KC_SHALTA:
+            if (record->event.pressed) {
+                if (is_lower_active) {
+                    if (detected_host_os() == OS_MACOS) {
+                        register_code(KC_LGUI);  // Use Command key on macOS
+                        register_code(KC_LSFT);
+                    } else {
+                        register_code(KC_LALT);  // Use Alt key on other OSes
+                        register_code(KC_LSFT);
+                    }
+                    is_alt_tab_active = true;
+                    tap_code(KC_TAB);  // Tap Tab key
+                } else {
+                    if (is_alt_tab_active) {
+                        tap_code(KC_TAB);  // Tap Tab key
+                    }
+                }
+            } else { // Key is released
+                if (is_lower_active) {
+                    unregister_code(KC_LSFT);
+                }
             }
             return false;
-        case KC_ENTER:
-      if (record->event.pressed) {
-        if (is_alt_tab_active) {
-          unregister_code(KC_LALT);
-          unregister_code(KC_LGUI);
-          is_alt_tab_active = false;
-          return false;
-        }
-      }
-      return true;
-
-    case KC_ESCAPE:
-      if (record->event.pressed) {
-        if (is_alt_tab_active) {
-          register_code(KC_ESCAPE);
-          unregister_code(KC_LALT);
-          unregister_code(KC_LGUI);
-          unregister_code(KC_ESCAPE);
-          is_alt_tab_active = false;
-          return false;
-        }
-      }
-      return true;
+        case KC_ESCAPE:
+            if (record->event.pressed) {
+                if (is_alt_tab_active) {
+                    register_code(KC_ESCAPE);
+                    unregister_code(KC_LALT);
+                    unregister_code(KC_LGUI);
+                    unregister_code(KC_ESCAPE);
+                    is_alt_tab_active = false;
+                }
+            }
+            return false;
         case KC_SCRSHT:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_MACOS) {
@@ -285,20 +328,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     register_code(KC_LSFT);
                     tap_code(KC_4);
                 } else if (detected_host_os() == OS_WINDOWS) {
-                    register_code(KC_LGUI);
+                    register_code(KC_LCTL);
                     register_code(KC_LSFT);
                     tap_code(KC_S);
                 }
             } else {
-        if (detected_host_os() == OS_MACOS) {
-            unregister_code(KC_LGUI);
-            unregister_code(KC_LSFT);
-        } else if (detected_host_os() == OS_WINDOWS) {
-            unregister_code(KC_LGUI);
-            unregister_code(KC_LSFT);
-        }
-    }
-    return false;
+                if (detected_host_os() == OS_MACOS) {
+                    unregister_code(KC_LGUI);
+                    unregister_code(KC_LSFT);
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    unregister_code(KC_LCTL);
+                    unregister_code(KC_LSFT);
+                }
+            }
+            return false;
         case KC_FIND:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_MACOS) {
@@ -309,38 +352,49 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                     tap_code(KC_F);
                 }
             } else {
-        if (detected_host_os() == OS_MACOS) {
-            unregister_code(KC_LGUI);
-        } else if (detected_host_os() == OS_WINDOWS) {
-            unregister_code(KC_LCTL);
-        }
-    }
-    return false;
+                if (detected_host_os() == OS_MACOS) {
+                    unregister_code(KC_LGUI);
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    unregister_code(KC_LCTL);
+                }
+            }
+            return false;
         case KC_SPLT:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_MACOS) {
                     register_code(KC_LGUI);
                     tap_code(KC_SPC);
-                } 
+                } else if (detected_host_os() == OS_WINDOWS) {
+                    register_code(KC_LGUI);
+                }
             } else {
-        if (detected_host_os() == OS_MACOS) {
-            unregister_code(KC_LGUI);
-        } 
-    }
-    return false;
+                if (detected_host_os() == OS_MACOS) {
+                    unregister_code(KC_LGUI);
+                }
+            }
+            return false;
         case KC_CAD:
             if (record->event.pressed) {
                 if (detected_host_os() == OS_WINDOWS) {
                     register_code(KC_LCTL);
                     register_code(KC_LALT);
                     tap_code(KC_DEL);
+                } else {
+                    // No alternative key combination for macOS, so do nothing
                 }
             } else {
-                unregister_code(KC_LCTL);
-                unregister_code(KC_LALT);
-                layer_move(_QWERTY);     
-    }
+                if (detected_host_os() == OS_WINDOWS) {
+                    unregister_code(KC_LCTL);
+                    unregister_code(KC_LALT);
+                }
+            }
+            return false;
         default:
-            return true;
+    if (is_alt_tab_active && timer_elapsed(alt_tab_debounce_timer) > ALT_TAB_DEBOUNCE_TIME) {
+        tap_code(KC_ENT);  // Send Enter key to select the highlighted window
+        is_alt_tab_active = false;
     }
-}
+    return true;
+        }
+        return true;
+        }
