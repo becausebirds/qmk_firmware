@@ -1,4 +1,4 @@
-name: QMK Firmware Build
+name: Build QMK Firmware
 
 on:
   push:
@@ -16,18 +16,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up QMK Docker Environment
-        run: |
-          docker pull qmkfm/qmk_cli:latest
-          docker run --rm qmkfm/qmk_cli qmk setup --yes
+      - name: Pull QMK Docker Image
+        run: docker pull qmkfm/qmk_cli:latest
 
-      - name: Build firmware
+      - name: Compile firmware
         run: |
-          docker run --rm -v ${{ github.workspace }}:/qmk_firmware qmkfm/qmk_cli \
+          docker run --rm \
+          -v ${{ github.workspace }}:/qmk_firmware \
+          -e SKIP_VERSION=1 \
+          qmkfm/qmk_cli \
           qmk compile -kb ploopyco/trackball_nano -km default
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ploopy-trackball-nano-firmware
-          path: keyboards/ploopyco/trackball_nano/default.hex
+          name: ploopyco_trackball_nano_default_firmware
+          path: ploopyco_trackball_nano_default.hex
